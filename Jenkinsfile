@@ -1,4 +1,8 @@
 pipeline {
+    
+    environment {
+     param1 = "clean compile"
+   }
 
     agent any
 
@@ -12,64 +16,37 @@ pipeline {
 
                 cleanWs()
 
-                git branch: 'master', url: 'https://github.com/deepak2717/HelloWorldMaven.git'
-
-                sh 'param1 = "clean compile"'
+                git branch: 'master', url: 'https://github.com/frankzhu2003/HelloWorldMaven.git'
+                
+                sh 'echo "My varialbe is ${param1}"'
 
                 sh '''
-
                     echo '{
-
                      "token": "MyToken",
-
                      "createBuildSessionId": true,
-
                      "appName": "${env.JOB_NAME}",
-
                      "branchName": "feature/sealight",
-
                      "buildName": "${env.BUILD_NUMBER}",
-
                      "packagesIncluded": "*com.kuhniverse.*",
-
                      "packagesExcluded": "",
-
                      "filesIncluded": "*.class",
-
                      "filesExcluded": "*test-classes*",
-
                      "recursive": true,
-
                      "includeResources": true,
-
                      "testStage": "${SUREFIRE_TEST_STAGE}",
-
-                     "failsafeArgLine"= "deploy",
-
+                     "failsafeArgLine": "deploy",
                      "labId": "'${param1}'",
-
                      "executionType": "full",
-
                      "logEnabled": false,
-
                      "logDestination": "console",
-
                      "logLevel": "off",
-
                      "logFolder": "/tmp",
-
                      "sealightsJvmParams": {
-
                          "sl.scm.provider": "test",
-
                          "sl.scm.baseUrl": "https://{dns}/projects/{project}/repos/{repo}/browse",
-
                          "sl.scm.version": "4.9.0"},
-
                      "enabled": true
-
                 }' > slmaven.json
-
                 '''
 
             }
@@ -81,13 +58,9 @@ pipeline {
             steps {
 
                 sh'''
-
                     labId=$(cat slmaven.json |jq -r '.labId')
-
                     echo ${labId}
-
                     mvn ${labId}
-
                 '''
 
             }
@@ -99,11 +72,8 @@ pipeline {
             steps {
 
                 sh '''
-
-                    provider=$(cat slmaven.json |jq -r '.sealightsJvmParams | .sl.scm.provider')
-
+                    provider=$(cat slmaven.json |jq -r '.sealightsJvmParams."sl.scm.provider"')
                     mvn ${provider}
-
                 '''
 
             }
@@ -115,11 +85,8 @@ pipeline {
             steps {
 
                sh'''
-
                     arg=$(cat slmaven.json |jq -r '.failsafeArgLine')
-
                     echo "can deploy using command: mvn ${arg}"
-
                 '''
 
             }
@@ -129,4 +96,3 @@ pipeline {
     }
 
 }
-
